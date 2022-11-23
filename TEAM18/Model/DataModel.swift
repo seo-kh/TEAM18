@@ -105,7 +105,7 @@ struct AirPollutionInformation: Codable {
     }
 }
 
-struct AirQuality: Codable, Identifiable {
+struct AirQuality: Codable, Identifiable, Hashable {
     
     var id: String { return stationName }
     // 시
@@ -137,6 +137,9 @@ struct AirQuality: Codable, Identifiable {
     // 미세먼지(PM25) 24시간 등급자료/농도
     let pm25Grade: String?
     let pm25Value: String?
+    
+    static let sample = AirQuality(
+        sidoName: "서울", stationName: "중구", dataTime: "2022-11-23 16:00", khaiGrade: "2", khaiValue: "69", so2Grade: "1", so2Value: "0.003", coGrade: "1", coValue: "0.4", o3Grade: "2", o3Value: "0.041", no2Grade: "1", no2Value: "0.010", pm10Grade: "2", pm10Value: "23", pm25Grade: "2", pm25Value: "17")
 }
 
 class DataStoreAirPollution: ObservableObject {

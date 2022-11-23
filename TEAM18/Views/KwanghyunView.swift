@@ -9,16 +9,13 @@ import SwiftUI
 import MapKit
 
 struct KwanghyunView: View {
-    @ObservedObject var dataStore: DataStoreAirPollution = DataStoreAirPollution(dataForm: [])
-    
-    private var webService: WebService = WebService()
-    @State private var sido: [String] = ["서울","부산","대구","인천","광주","대전","울산","경기","강원","충북","충남","전북","전남","경북","경남","제주","세종"]
     private let columns: [GridItem] = .init(repeating: .init(.flexible(), spacing: 16.0, alignment: .center), count: 2)
     
     @State private var coordinateRegion = MKCoordinateRegion(
         center: .init(latitude: 36.458351, longitude: 127.855843),
         span: .init(latitudeDelta: 4, longitudeDelta: 4)
     )
+    @State private var place: IdentifiablePlace?
     
     var body: some View {
         Map(
@@ -28,56 +25,167 @@ struct KwanghyunView: View {
             userTrackingMode: .none,
             annotationItems: IdentifiablePlace.places
         ) {
-                place in
-                MapAnnotation(coordinate: place.location) {
-                    Button {
-                        withAnimation(.easeOut) {
-                            coordinateRegion = MKCoordinateRegion(center: place.location, span: .init(latitudeDelta: 0.5, longitudeDelta: 0.5))
-                        }
-                    
-                    } label: {
-                        Text(place.name)
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .shadow(radius: 8)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.pink)
+            place in
+            MapAnnotation(coordinate: place.location) {
+                Button {
+                    self.place = place
+                } label: {
+                    Text(place.name)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .shadow(radius: 8)
                 }
-        }
-        .overlay(alignment: .topLeading) {
-            Button {
-                withAnimation(.easeOut) {
-                    coordinateRegion = MKCoordinateRegion(
-                        center: .init(latitude: 36.458351, longitude: 127.855843),
-                        span: .init(latitudeDelta: 4, longitudeDelta: 4)
-                    )
-                }
-            } label: {
-                Image(systemName: "chevron.left")
-                    .frame(width: 40, height: 40)
-                    .background(Material.thickMaterial)
-                    .cornerRadius(20.0)
-                    .padding()
+                .buttonStyle(.borderedProminent)
+                .tint(.pink)
             }
+        }
+        .edgesIgnoringSafeArea(.all)
+        .sheet(item: $place) {
+            withAnimation(.easeOut) {
+                coordinateRegion = MKCoordinateRegion(
+                    center: .init(latitude: 36.458351, longitude: 127.855843),
+                    span: .init(latitudeDelta: 4, longitudeDelta: 4)
+                )
+            }
+        } content: { place in
+            AirPollutionView(place: place.name)
+        }
+        
+    }
+}
 
+extension CLLocationCoordinate2D: Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        (lhs.latitude == rhs.latitude) && (lhs.longitude == rhs.longitude)
+    }
+}
+
+
+struct AirPollutionView: View {
+    @StateObject var dataStore: DataStoreAirPollution = DataStoreAirPollution(dataForm: [])
+    private var webService: WebService = WebService()
+    let place: String
+    init(place: String) {
+        self.place = place
+    }
+    var body: some View {
+        ZStack {
+            if dataStore.dataForm.isEmpty {
+                ProgressView()
+            } else {
+                NavigationStack {
+                    List {
+                        ForEach(dataStore.dataForm) { air in
+                            NavigationLink(value: air) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(air.stationName)
+                                        .font(.headline)
+                                    Text(air.dataTime ?? "(누락)")
+                                        .font(.subheadline)
+                                }
+                            }
+                        }
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationTitle(place)
+                    .navigationDestination(for: AirQuality.self) { airQuality in
+                        AirPollutionChartView(airQuality: airQuality)
+                    }
+                }
+            }
+        }
+        .task {
+            dataStore.dataForm = await webService.fetchData광현(url: URLS.광현님, sidoName: place)
         }
     }
 }
 
-//Task {
-//    dataStore.dataForm = try await webService.fetchData광현(url: URLS.광현님, sidoName: "부산")
-//}
+struct AirPollutionChartView: View {
+    let airQuality: AirQuality
+    
+    var body: some View {
+            List {
+                VStack(alignment: .leading) {
+                    Text("일산화탄소")
+                        .font(.headline)
+                    Text("지수: " + (airQuality.coGrade ?? "(누락)"))
+                    Text("농도: " + (airQuality.coValue ?? "(누락)") + " (단위: ppm)")
+                }
+                .font(.subheadline)
+                
+                VStack(alignment: .leading) {
+                    Text("이산화질소")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.no2Grade ?? "(누락)"))
+                    Text("농도: " + (airQuality.no2Value ?? "(누락)") + " (단위: ppm)")
+                }
+                .font(.subheadline)
+
+                
+                VStack(alignment: .leading) {
+                    Text("아황산가스")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.so2Grade ?? "(누락)"))
+                    Text("농도: " + (airQuality.so2Value ?? "(누락)") + " (단위: ppm)")
+                }
+                .font(.subheadline)
+
+                
+                VStack(alignment: .leading) {
+                    Text("오존")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.o3Grade ?? "(누락)"))
+                    Text("농도: " + (airQuality.o3Value ?? "(누락)") + " (단위: ppm)")
+                }
+                .font(.subheadline)
+
+                
+                VStack(alignment: .leading) {
+                    Text("미세먼지(PM10) 24시간 등급자료")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.pm10Grade ?? "(누락)"))
+                    Text("농도: " + (airQuality.pm10Value ?? "(누락)") + " (단위: ㎍/㎥)")
+                }
+                .font(.subheadline)
+
+                
+                VStack(alignment: .leading) {
+                    Text("미세먼지(PM25) 24시간 등급자료")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.pm25Grade ?? "(누락)"))
+                    Text("농도: " + (airQuality.pm25Value ?? "(누락)") + " (단위: ㎍/㎥)")
+                }
+                .font(.subheadline)
+
+                
+                VStack(alignment: .leading) {
+                    Text("통합 대기환경 지수/농도")
+                        .font(.headline)
+
+                    Text("지수: " + (airQuality.khaiGrade ?? "(누락)"))
+                    Text("농도: " + (airQuality.khaiValue ?? "(누락)"))
+                }
+                .font(.subheadline)
+
+            } // LIST
+            .navigationTitle(airQuality.sidoName+"시 "+airQuality.stationName+"의 공기질정보에요 🌬️")
+            .navigationBarTitleDisplayMode(.inline)
+    }
+}
 
 struct KwanghyunView_Previews: PreviewProvider {
+    
     static var previews: some View {
-//        NavigationStack {
-//            KwanghyunView()
-//        }
-        
-            KwanghyunView()
-            .environment(\.locale, .init(identifier: "ko_KR"))
-        
+        //            KwanghyunView()
+        NavigationStack {
+            AirPollutionChartView(airQuality: AirQuality.sample)
+                .environment(\.locale, .init(identifier: "ko_KR"))
+        }
     }
 }
 
@@ -112,13 +220,3 @@ struct IdentifiablePlace: Identifiable {
         .init(name: "세종", lat: 36.482978, long: 127.261829),
     ]
 }
-//
-//Map(coordinateRegion: $region,
-//            annotationItems: [place]
-//        ) { place in
-//            MapAnnotation(coordinate: place.location) {
-//                Rectangle().stroke(Color.blue)
-//                .frame(width: 20, height: 20)
-//            }
-//        }
-

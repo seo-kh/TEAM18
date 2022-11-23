@@ -46,16 +46,20 @@ class WebService {
     }
 
     // 동시에 쓰여야할땐 async 써야한다?
-    func fetchData광현(url: String, sidoName: String = "서울") async throws -> [AirQuality] {
+    func fetchData광현(url: String, sidoName: String = "서울") async -> [AirQuality] {
         let urlString = url + "&sidoName=" + (sidoName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")
         guard let url = URL(string: urlString) else {
             print("error")
             return []
             
         }
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let airs = try JSONDecoder().decode(AirPollutionInformation.self, from: data)
-        
-        return airs.items
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let airs = try JSONDecoder().decode(AirPollutionInformation.self, from: data)
+            return airs.items
+        } catch {
+            print("error")
+        }
+        return []
     }
 }

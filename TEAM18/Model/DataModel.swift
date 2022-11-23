@@ -6,7 +6,8 @@
 //
 
 import Foundation
-
+import SwiftUI
+import CoreLocation
 // MARK: - 현기님
 struct PriceDataForm: Codable {
     var DESCRIPTION: Description
@@ -41,7 +42,7 @@ class DataStore: ObservableObject {
 }
 
 // MARK: - 형구님
-struct Bicycle : Codable, Identifiable {
+struct Bicycle : Codable, Identifiable{
     var id: String {
         get {
             return lendplace_id
@@ -50,6 +51,8 @@ struct Bicycle : Codable, Identifiable {
     var lendplace_id: String
     var statn_addr1: String
     var statn_addr2: String
+    var statn_lat: Double
+    var statn_lnt: Double
 }
 
 class DataStoreBicycle: ObservableObject {
@@ -72,7 +75,7 @@ struct Restaurant: Codable {
     let fdCS: String // 음식 종류
     let bzNm: String // 가게 이름
     let smplDesc: String // 설명
-
+    
     enum CodingKeys: String, CodingKey {
         case gngCS = "GNG_CS"
         case fdCS = "FD_CS"
@@ -114,7 +117,7 @@ struct AirQuality: Codable, Identifiable {
     let stationName: String
     // 시간대
     let dataTime: String?
-
+    
     // 통합 대기환경 지수/농도
     let khaiGrade: String?
     let khaiValue: String?

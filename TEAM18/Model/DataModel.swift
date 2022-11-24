@@ -121,25 +121,36 @@ struct AirQuality: Codable, Identifiable, Hashable {
     // 통합 대기환경 지수/농도
     let khaiGrade: String?
     let khaiValue: String?
+    var khaiValueDouble: Double { self.khaiValue.toDouble() ?? 0.0 }
+
     // 아황산가스 지수/농도
     let so2Grade: String?
     let so2Value: String?
+    var so2ValueDouble: Double { self.so2Value.toDouble() ?? 0.0 }
     // 일산화탄소 지수/농도
     let coGrade: String?
     let coValue: String?
+    var coValueDouble: Double { self.coValue.toDouble() ?? 0.0 }
     // 오존 지수/농도
     let o3Grade: String?
     let o3Value: String?
+    var o3ValueDouble: Double { self.o3Value.toDouble() ?? 0.0 }
+
     // 이산화질소 지수/농도
     let no2Grade: String?
     let no2Value: String?
+    var no2ValueDouble: Double { self.no2Value.toDouble() ?? 0.0 }
     
     // 미세먼지(PM10) 24시간 등급자료/농도
     let pm10Grade: String?
     let pm10Value: String?
+    var pm10ValueDouble: Double { self.pm10Value.toDouble() ?? 0.0 }
+
     // 미세먼지(PM25) 24시간 등급자료/농도
     let pm25Grade: String?
     let pm25Value: String?
+    var pm25ValueDouble: Double { self.pm25Value.toDouble() ?? 0.0 }
+
     
     static let sample = AirQuality(
         sidoName: "서울", stationName: "중구", dataTime: "2022-11-23 16:00", khaiGrade: "2", khaiValue: "69", so2Grade: "1", so2Value: "0.003", coGrade: "1", coValue: "0.4", o3Grade: "2", o3Value: "0.041", no2Grade: "1", no2Value: "0.010", pm10Grade: "2", pm10Value: "23", pm25Grade: "2", pm25Value: "17")

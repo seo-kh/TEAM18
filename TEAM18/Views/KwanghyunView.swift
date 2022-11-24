@@ -110,6 +110,7 @@ struct AirPollutionChartView: View {
                         .font(.headline)
                     Text("지수: " + (airQuality.coGrade ?? "(누락)"))
                     Text("농도: " + (airQuality.coValue ?? "(누락)") + " (단위: ppm)")
+                    Text("\(airQuality.coValueDouble)")
                 }
                 .font(.subheadline)
                 
@@ -175,6 +176,15 @@ struct AirPollutionChartView: View {
             } // LIST
             .navigationTitle(airQuality.sidoName+"시 "+airQuality.stationName+"의 공기질정보에요 🌬️")
             .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+extension String? {
+    func toDouble() -> Double? {
+        if let value = self {
+            return Double(value) ?? 0.0
+        }
+        return nil
     }
 }
 
